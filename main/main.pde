@@ -17,7 +17,7 @@ void setup() {
   setupTitleScreen(); // 初始化遊戲開始畫面(定義在 GameStart.pde)
   setupCharacterSelection(); // 初始化角色選擇(定義在 CharacterSelection.pde)
   setupStageSelector(); // 初始化關卡選擇(定義在 StageSelector.pde)
-  game = new Game();
+   //game = new Game();
   stageEditor = new StageEditor(); // 初始化關卡編輯器
 }
 

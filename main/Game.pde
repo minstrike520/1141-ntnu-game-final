@@ -14,7 +14,7 @@ class Game {
     player2 = new Player(600, 100, color(255, 150, 100), LEFT, RIGHT, UP);
     
     // Initialize platforms
-    platforms = getStageplatforms(stage - 1);
+    platforms = getStageplatforms(stage);
   }
   
   void update() {
@@ -35,6 +35,7 @@ class Game {
     // Display controls info
     fill(0);
     textSize(14);
+    textAlign(LEFT, CENTER);
     text("Player 1 (Blue): W=Jump, A=Left, D=Right", 10, 20);
     text("Player 2 (Orange): UP=Jump, LEFT, RIGHT", 10, 40);
   }

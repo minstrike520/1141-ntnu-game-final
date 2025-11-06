@@ -4,11 +4,9 @@ int totalStages = 3; // Number of available stages
 ArrayList<StageInfo> stageList;
 
 class StageInfo {
-  int stageNum;
   String name;
   
-  StageInfo(int num, String name) {
-    this.stageNum = num;
+  StageInfo(String name) {
     this.name = name;
   }
 }
@@ -16,9 +14,9 @@ class StageInfo {
 void setupStageSelector() {
   // Initialize stage list
   stageList = new ArrayList<StageInfo>();
-  stageList.add(new StageInfo(1, "Classic Arena"));
-  stageList.add(new StageInfo(2, "Sky Towers"));
-  stageList.add(new StageInfo(3, "Minimal Stage"));
+  stageList.add(new StageInfo("Classic Arena"));
+  stageList.add(new StageInfo("Sky Towers"));
+  stageList.add(new StageInfo("Minimal Stage"));
   
   selectedStageIndex = 0;
 }
@@ -150,7 +148,7 @@ void drawStageList(float x, float y, float w, float h) {
     fill(255);
     textAlign(CENTER, TOP);
     textSize(32);
-    text("Stage " + stage.stageNum, itemX + itemWidth / 2, itemY + 10);
+    text("Stage " + (i + 1), itemX + itemWidth / 2, itemY + 10);
     
     // Draw stage name
     textSize(16);
@@ -183,8 +181,7 @@ void stageSelectorKeyPressed() {
     selectedStageIndex = (selectedStageIndex + 1) % stageList.size();
   } else if (key == 'c' || key == 'C') {
     // Confirm selection and start game with selected stage
-    int selectedStage = stageList.get(selectedStageIndex).stageNum;
-    game = new Game(selectedStage);
+    game = new Game(selectedStageIndex);
     uiStat = UI_GAME;
   }
 }
