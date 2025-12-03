@@ -9,7 +9,7 @@ class Game {
   int winner = 0; // 0=無, 1=玩家1勝, 2=玩家2勝
   
   
-  Game(int stage, int type1, int type2) {
+  Game(int stageIndex, int type1, int type2) {
     // Player 1: WAD controls (A=left, D=right, W=jump, V=throw bomb, E=place bomb)
     player1 = new Player(100, 100, color(100, 150, 255), 'a', 'd', 'w', 'v', 'e', type1);
     // Player 2: Arrow keys (LEFT, RIGHT, UP, M=throw bomb, K=place bomb)
@@ -24,7 +24,7 @@ class Game {
     if (type2 == 0) player2.setBomberMode();
     
     // Initialize platforms
-    platforms = getStageplatforms(stage);
+    platforms = stageList.get(stageIndex).platforms;
     throwBombs = new ArrayList<ThrowBomb>();
   }
   
