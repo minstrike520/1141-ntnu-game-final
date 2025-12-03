@@ -117,7 +117,6 @@ void drawStageSelector() {
   fill(200);
   textAlign(RIGHT, BOTTOM);
   textSize(14);
-  text("UP/DOWN or Click to select", width - 20, height - 30);
 }
 
 void drawStagePreview(float x, float y, float w, float h, int stageIndex) {

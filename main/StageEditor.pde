@@ -1,3 +1,10 @@
+StageEditor stageEditor;
+int customStageCount = 0;
+
+void setupStageEditor() {
+  stageEditor = new StageEditor();
+}
+
 // Stage Editor for creating and editing platforms
 class StageEditor {
   ArrayList<Platform> platforms;
@@ -12,6 +19,7 @@ class StageEditor {
   Button addButton;
   Button removeButton;
   Button exportButton;
+  Button appendButton;
   Button backButton;
   Button gridToggleButton;
   
@@ -29,9 +37,10 @@ class StageEditor {
     // Initialize UI buttons
     addButton = new Button(20, 20, 100, 40, "Add Platform");
     removeButton = new Button(130, 20, 120, 40, "Remove");
-    exportButton = new Button(260, 20, 100, 40, "Export");
+    exportButton = new Button(260, 20, 100, 40, "export");
+    appendButton = new Button(370, 20, 120, 40, "append to game");
     backButton = new Button(width - 120, 20, 100, 40, "Back");
-    gridToggleButton = new Button(370, 20, 120, 40, "Grid: ON");
+    gridToggleButton = new Button(500, 20, 120, 40, "Grid: ON");
   }
   
   void update() {
@@ -39,6 +48,7 @@ class StageEditor {
     addButton.update();
     removeButton.update();
     exportButton.update();
+    appendButton.update();
     backButton.update();
     gridToggleButton.update();
   }
@@ -76,6 +86,7 @@ class StageEditor {
     addButton.display();
     removeButton.display();
     exportButton.display();
+    appendButton.display();
     backButton.display();
     gridToggleButton.display();
     
@@ -122,6 +133,11 @@ class StageEditor {
     
     if (exportButton.isMouseOver()) {
       exportCode();
+      return;
+    }
+
+    if (appendButton.isMouseOver()) {
+      append();
       return;
     }
     
@@ -203,6 +219,11 @@ class StageEditor {
     
     // Show confirmation
     println("Code exported to console! Copy and paste into Game.pde");
+  }
+
+  void append() {
+    customStageCount++;
+    stageList.add(new Stage("Custom" + customStageCount, new ArrayList<>(platforms)));
   }
   
   void keyPressed() {

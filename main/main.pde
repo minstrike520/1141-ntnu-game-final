@@ -18,7 +18,6 @@ final int UI_GAME = 4;
 final int UI_STAGE_EDITOR = 5;
 int uiStat = 1;
 Game game;
-StageEditor stageEditor;
 
 // 聲音相關變數
 AudioIn input;
@@ -30,7 +29,7 @@ void setup() {
   setupTitleScreen(); // 初始化遊戲開始畫面(定義在 GameStart.pde)
   setupCharacterSelection(); // 初始化角色選擇(定義在 CharacterSelection.pde)
   setupStageSelector(); // 初始化關卡選擇(定義在 StageSelector.pde)
-  stageEditor = new StageEditor(); // 初始化關卡編輯器
+  setupStageEditor(); // 初始化關卡編輯器(定義在 StageEditor.pde)
    // 初始化聲音
   input = new AudioIn(this, 0);
   input.start();
