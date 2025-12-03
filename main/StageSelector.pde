@@ -1,23 +1,72 @@
 // Stage Selector - Preview and select stages
 int selectedStageIndex = 0;
 int totalStages = 3; // Number of available stages
-ArrayList<StageInfo> stageList;
+ArrayList<Stage> stageList;
 
-class StageInfo {
+class Stage {
   String name;
+  ArrayList<Platform> platforms;
   
-  StageInfo(String name) {
+  Stage(String name, ArrayList<Platform> platforms) {
     this.name = name;
+    this.platforms = platforms;
   }
+}
+
+Stage stageClassicArena() {
+  String name = "Classic Arena";
+  ArrayList<Platform> platforms = new ArrayList();
+
+  platforms.add(new Platform(0, 500, 960, 40));
+  platforms.add(new Platform(150, 400, 150, 20));
+  platforms.add(new Platform(660, 400, 150, 20));
+  platforms.add(new Platform(50, 300, 120, 20));
+  platforms.add(new Platform(300, 250, 200, 20));
+  platforms.add(new Platform(790, 300, 120, 20));
+  platforms.add(new Platform(150, 150, 100, 20));
+  platforms.add(new Platform(710, 150, 100, 20));
+  platforms.add(new Platform(430, 80, 100, 20));
+
+  return new Stage(name, platforms);
+}
+
+Stage stageSkyTowers() {
+  String name = "Sky Towers";
+  ArrayList<Platform> platforms = new ArrayList();
+
+  platforms.add(new Platform(0, 500, 200, 40));
+  platforms.add(new Platform(760, 500, 200, 40));
+  platforms.add(new Platform(100, 380, 100, 20));
+  platforms.add(new Platform(760, 380, 100, 20));
+  platforms.add(new Platform(200, 260, 100, 20));
+  platforms.add(new Platform(660, 260, 100, 20));
+  platforms.add(new Platform(300, 140, 100, 20));
+  platforms.add(new Platform(560, 140, 100, 20));
+  platforms.add(new Platform(430, 60, 100, 20));
+
+  return new Stage(name, platforms);
+}
+
+Stage stageMinimalStage() {
+  String name = "Minimal Stage";
+  ArrayList<Platform> platforms = new ArrayList();
+
+  platforms.add(new Platform(0, 500, 960, 40));
+  platforms.add(new Platform(200, 350, 150, 20));
+  platforms.add(new Platform(610, 350, 150, 20));
+  platforms.add(new Platform(380, 200, 200, 20));
+  
+  return new Stage(name, platforms);
 }
 
 void setupStageSelector() {
   // Initialize stage list
-  stageList = new ArrayList<StageInfo>();
-  stageList.add(new StageInfo("Classic Arena"));
-  stageList.add(new StageInfo("Sky Towers"));
-  stageList.add(new StageInfo("Minimal Stage"));
-  
+  stageList = new ArrayList<Stage>();
+
+  stageList.add(stageClassicArena());
+  stageList.add(stageSkyTowers());
+  stageList.add(stageMinimalStage());
+
   selectedStageIndex = 0;
 }
 
@@ -95,7 +144,7 @@ void drawStagePreview(float x, float y, float w, float h, int stageIndex) {
   scale(previewScale);
   
   // Draw platforms for the selected stage
-  ArrayList<Platform> previewPlatforms = getStageplatforms(stageIndex);
+  ArrayList<Platform> previewPlatforms = stageList.get(stageIndex).platforms;
   
   for (Platform p : previewPlatforms) {
     fill(120, 180, 120);
@@ -119,7 +168,7 @@ void drawStageList(float x, float y, float w, float h) {
   float startY = y + (h - totalHeight) / 2; // Center vertically
   
   for (int i = 0; i < stageList.size(); i++) {
-    StageInfo stage = stageList.get(i);
+    Stage stage = stageList.get(i);
     float itemY = startY + i * (itemHeight + spacing);
     
     boolean isSelected = (i == selectedStageIndex);
@@ -214,41 +263,4 @@ void stageSelectorMousePressed() {
       break;
     }
   }
-}
-
-// Helper function to get platforms for a specific stage
-ArrayList<Platform> getStageplatforms(int stageIndex) {
-  ArrayList<Platform> platforms = new ArrayList<Platform>();
-  
-  if (stageIndex == 0) {
-    // Stage 1: Classic Arena
-    platforms.add(new Platform(0, 500, 960, 40));
-    platforms.add(new Platform(150, 400, 150, 20));
-    platforms.add(new Platform(660, 400, 150, 20));
-    platforms.add(new Platform(50, 300, 120, 20));
-    platforms.add(new Platform(300, 250, 200, 20));
-    platforms.add(new Platform(790, 300, 120, 20));
-    platforms.add(new Platform(150, 150, 100, 20));
-    platforms.add(new Platform(710, 150, 100, 20));
-    platforms.add(new Platform(430, 80, 100, 20));
-  } else if (stageIndex == 1) {
-    // Stage 2: Sky Towers
-    platforms.add(new Platform(0, 500, 200, 40));
-    platforms.add(new Platform(760, 500, 200, 40));
-    platforms.add(new Platform(100, 380, 100, 20));
-    platforms.add(new Platform(760, 380, 100, 20));
-    platforms.add(new Platform(200, 260, 100, 20));
-    platforms.add(new Platform(660, 260, 100, 20));
-    platforms.add(new Platform(300, 140, 100, 20));
-    platforms.add(new Platform(560, 140, 100, 20));
-    platforms.add(new Platform(430, 60, 100, 20));
-  } else if (stageIndex == 2) {
-    // Stage 3: Minimal Stage
-    platforms.add(new Platform(0, 500, 960, 40));
-    platforms.add(new Platform(200, 350, 150, 20));
-    platforms.add(new Platform(610, 350, 150, 20));
-    platforms.add(new Platform(380, 200, 200, 20));
-  }
-  
-  return platforms;
 }
