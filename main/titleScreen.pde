@@ -6,7 +6,6 @@ boolean alphaIncreasing = false;
 
 // Button areas for title screen
 float startButtonX, startButtonY, startButtonW, startButtonH;
-float editorButtonX, editorButtonY, editorButtonW, editorButtonH;
 
 void setupTitleScreen() {
   startBackgroundGif = new Gif(this, "titleScreen.gif");
@@ -16,12 +15,7 @@ void setupTitleScreen() {
   startButtonW = 200;
   startButtonH = 60;
   startButtonX = width / 2 - startButtonW / 2;
-  startButtonY = height * 1 / 4;
-  
-  editorButtonW = 200;
-  editorButtonH = 60;
-  editorButtonX = width / 2 - editorButtonW / 2;
-  editorButtonY = height * 1 / 4 + 80;
+  startButtonY = height / 2 * 0.6 - startButtonH / 2;
 }
 
 void drawTitleScreen() {
@@ -41,17 +35,7 @@ void drawTitleScreen() {
     fill(0, 100, 0, textAlpha);
   }
   textSize(48);
-  text("Start Game", width / 2 - 10, startButtonY + 20);
-  
-  // Draw Stage Editor button
-  boolean hoverEditor = isMouseOverButton(editorButtonX, editorButtonY, editorButtonW, editorButtonH);
-  if (hoverEditor) {
-    fill(100, 0, 150, 200);
-  } else {
-    fill(50, 0, 100, textAlpha);
-  }
-  textSize(36);
-  text("Stage Editor", width / 2 - 10, editorButtonY + 20);
+  text("Start Game", width / 2 - 15, startButtonY + 30);
   
   // Blinking effect
   if (alphaIncreasing) {
@@ -77,14 +61,6 @@ void handleTitleScreenClick() {
   // Check if Start Game button is clicked
   if (isMouseOverButton(startButtonX, startButtonY, startButtonW, startButtonH)) {
     uiStat = UI_CHARACTER_SELECTION;
-    // 當離開標題畫面時停止 GIF 播放(可選,節省資源)
-    if (startBackgroundGif != null) {
-      startBackgroundGif.pause();
-    }
-  }
-  // Check if Stage Editor button is clicked
-  else if (isMouseOverButton(editorButtonX, editorButtonY, editorButtonW, editorButtonH)) {
-    uiStat = UI_STAGE_EDITOR;
     // 當離開標題畫面時停止 GIF 播放(可選,節省資源)
     if (startBackgroundGif != null) {
       startBackgroundGif.pause();

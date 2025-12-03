@@ -2,49 +2,70 @@ class Game {
   Player player1;
   Player player2;
   ArrayList<Platform> platforms;
-  ArrayList<ThrowBomb> throwBombs;  // 拋擲炸彈列表
+  ArrayList<ThrowBomb> throwBombs;
   int explosionFrame = 0;
   ThrowBomb explodingBomb = null;
   boolean gameOver = false;
-  int winner = 0; // 0=無, 1=玩家1勝, 2=玩家2勝
+  int winner = 0;
   
+  // 天氣特效系統
+  int weatherType; // 0=無, 1=下雨, 2=飄雪, 3=颳風
+  ArrayList<WeatherParticle> weatherParticles;
+  float windForce = 0; // 風力
   
   Game(int stageIndex, int type1, int type2) {
-    // Player 1: WAD controls (A=left, D=right, W=jump, V=throw bomb, E=place bomb)
     player1 = new Player(100, 100, color(100, 150, 255), 'a', 'd', 'w', 'v', 'e', type1);
-    // Player 2: Arrow keys (LEFT, RIGHT, UP, M=throw bomb, K=place bomb)
     player2 = new Player(600, 100, color(255, 150, 100), LEFT, RIGHT, UP, 'm', 'k', type2);
     
-    // 設置玩家的遊戲參考
     player1.gameInstance = this;
     player2.gameInstance = this;
     
-    // 設定角色特殊能力
     if (type1 == 0) player1.setBomberMode();
     if (type2 == 0) player2.setBomberMode();
     
-    // Initialize platforms
     platforms = stageList.get(stageIndex).platforms;
     throwBombs = new ArrayList<ThrowBomb>();
+    
+    // 隨機選擇天氣 (30% 機率無天氣)
+    float rand = random(1);
+    if (rand < 0.3) {
+      weatherType = 0; // 無天氣
+    } else if (rand < 0.5) {
+      weatherType = 1; // 下雨
+    } else if (rand < 0.7) {
+      weatherType = 2; // 飄雪
+    } else {
+      weatherType = 3; // 颳風
+    }
+    
+    // 初始化天氣粒子
+    weatherParticles = new ArrayList<WeatherParticle>();
+    initWeatherParticles();
   }
   
   void update() {
     if (!gameOver) {
+      // 更新天氣特效
+      updateWeather();
+      
       player1.update(platforms, player2);
       player2.update(platforms, player1);
       
-      // 更新拋擲炸彈
+      // 風力影響玩家
+      if (weatherType == 3) {
+        player1.vel.x += windForce;
+        player2.vel.x += windForce;
+      }
+      
       for (int i = throwBombs.size() - 1; i >= 0; i--) {
         ThrowBomb b = throwBombs.get(i);
         b.update(platforms);
         
-        // 如果炸彈爆炸了但還沒設置爆炸幀數，設置它
         if (b.exploded && explodingBomb != b && explosionFrame <= 0) {
           explodingBomb = b;
-          explosionFrame = 10; // 爆炸持續10幀
+          explosionFrame = 10;
         }
         
-        // 檢查與玩家的碰撞 (只在拋出後足夠時間後檢查)
         if (!b.exploded && b.throwFrame <= 0) {
           if (b.checkPlayerCollision(player1) || b.checkPlayerCollision(player2)) {
             b.exploded = true;
@@ -53,17 +74,14 @@ class Game {
           }
         }
         
-        // 移除已爆炸且超時的炸彈
         if (b.exploded && explosionFrame <= 0) {
           throwBombs.remove(i);
         }
       }
       
-      // 更新爆炸幀數
       if (explosionFrame > 0) {
         explosionFrame--;
         
-        // 爆炸時施加傷害
         if (explodingBomb != null) {
           explodingBomb.applyBlastToPlayer(player1);
           explodingBomb.applyBlastToPlayer(player2);
@@ -72,7 +90,6 @@ class Game {
         explodingBomb = null;
       }
       
-      // 檢查是否有玩家死亡
       if (player1.health <= 0) {
         gameOver = true;
         winner = 2;
@@ -99,46 +116,8 @@ class Game {
       b.displayExplosion();
     }
     
-    // Display controls info
-    fill(0);
-    textSize(14);
-    textAlign(LEFT, CENTER);
-    
-    // Player 1 控制說明（根據角色類型）
-    String p1Controls = "Player 1 (Blue): W=Jump, A=Left, D=Right";
-    if (player1.type == 0) {
-      p1Controls += ", E=Bomb (Double Jump for 3x high!)";
-    } else if (player1.type == 1) {
-      p1Controls += ", E=Throw Bomb (Ninja)";
-    } else if (player1.type == 2) {
-      p1Controls += " (Knight)";
-      p1Controls += ", E=Hook (Rope)";
-    } else if (player1.type == 3) {
-      p1Controls += " (Wizard)";
-    }
-    text(p1Controls, 10, 20);
-    
-    // Player 2 控制說明（根據角色類型）
-    String p2Controls = "Player 2 (Orange): UP=Jump, LEFT/RIGHT=Move";
-    if (player2.type == 0) {
-      p2Controls += ", K=Bomb (Double Jump for 3x high!)";
-    } else if (player2.type == 1) {
-      p2Controls += ", K=Throw Bomb (Ninja)";
-    } else if (player2.type == 2) {
-      p2Controls += " (Knight)";
-      p2Controls += ", K=Hook (Rope)";
-    } else if (player2.type == 3) {
-      p2Controls += " (Wizard)";
-    }
-    text(p2Controls, 10, 40);
-    
-    // Display health info
-    textSize(16);
-    textAlign(LEFT, TOP);
-    fill(100, 150, 255);
-    text("Player 1 HP: " + (int)player1.health + "/" + (int)player1.maxHealth, 10, 80);
-    fill(255, 150, 100);
-    text("Player 2 HP: " + (int)player2.health + "/" + (int)player2.maxHealth, 10, 100);
+    // Display weather effects
+    displayWeather();
     
     // Display game over screen
     if (gameOver) {
@@ -147,32 +126,28 @@ class Game {
   }
   
   void displayGameOver() {
-    // 半透明黑色背景
     fill(0, 0, 0, 200);
     noStroke();
     rect(0, 0, width, height);
     
-    // 遊戲結束文字
     fill(255);
     textSize(64);
     textAlign(CENTER, CENTER);
     text("GAME OVER", width / 2, height / 2 - 60);
     
-    // 勝者文字
     textSize(48);
     String winnerText = "";
     color winnerColor = color(255);
     if (winner == 1) {
       winnerText = "Player 1 Wins!";
-      winnerColor = color(100, 150, 255); // 藍色
+      winnerColor = color(100, 150, 255);
     } else if (winner == 2) {
       winnerText = "Player 2 Wins!";
-      winnerColor = color(255, 150, 100); // 橙色
+      winnerColor = color(255, 150, 100);
     }
     fill(winnerColor);
     text(winnerText, width / 2, height / 2 + 20);
     
-    // 按鈕提示
     textSize(24);
     float flashAlpha = 128 + sin(frameCount * 0.1) * 127;
     fill(255, 255, 100, flashAlpha);
@@ -190,25 +165,152 @@ class Game {
   }
   
   void throwBomb(Player player) {
-    // 計算拋出方向 (朝面對方向)
     float direction = player.movingRight ? 1 : -1;
     if (!player.movingLeft && !player.movingRight) {
-      direction = player.vel.x > 0 ? 1 : -1; // 沒移動時用上一個慣性方向
-      if (player.vel.x == 0) direction = 1; // 完全靜止時預設向右
+      direction = player.vel.x > 0 ? 1 : -1;
+      if (player.vel.x == 0) direction = 1;
     }
     
-    // 炸彈起始位置 (玩家中心)
     float bombX = player.pos.x + player.wh.x / 2;
     float bombY = player.pos.y + player.wh.y / 2;
     
-    // 炸彈速度 - 30度角拋出
-    float angleRad = radians(30); // 30度轉換為弧度
-    float speed = 10; // 拋出速度
+    float angleRad = radians(30);
+    float speed = 10;
     
     float bombVx = direction * speed * cos(angleRad) + player.vel.x * 0.3;
-    float bombVy = -speed * sin(angleRad); // 負值表示向上
+    float bombVy = -speed * sin(angleRad);
+    
+    // 風力影響炸彈
+    if (weatherType == 3) {
+      bombVx += windForce * 2;
+    }
     
     ThrowBomb newBomb = new ThrowBomb(bombX, bombY, bombVx, bombVy);
     throwBombs.add(newBomb);
+  }
+  
+  // 初始化天氣粒子
+  void initWeatherParticles() {
+    int particleCount = 0;
+    if (weatherType == 1) particleCount = 150; // 雨滴數量
+    else if (weatherType == 2) particleCount = 100; // 雪花數量
+    else if (weatherType == 3) particleCount = 80; // 風中的葉子/灰塵
+    
+    for (int i = 0; i < particleCount; i++) {
+      weatherParticles.add(new WeatherParticle(weatherType));
+    }
+  }
+  
+  // 更新天氣
+  void updateWeather() {
+    // 更新風力（颳風時風力會波動）
+    if (weatherType == 3) {
+      windForce = sin(frameCount * 0.02) * 0.3 + cos(frameCount * 0.05) * 0.2;
+    }
+    
+    // 更新天氣粒子
+    for (WeatherParticle p : weatherParticles) {
+      p.update(weatherType, windForce);
+    }
+  }
+  
+  // 顯示天氣特效
+  void displayWeather() {
+    for (WeatherParticle p : weatherParticles) {
+      p.display(weatherType);
+    }
+    
+    // 顯示天氣提示
+    fill(255, 255, 255, 150);
+    textSize(14);
+    textAlign(RIGHT, TOP);
+    String weatherText = "";
+    if (weatherType == 1) weatherText = "天氣: 下雨 🌧";
+    else if (weatherType == 2) weatherText = "天氣: 飄雪 ❄";
+    else if (weatherType == 3) weatherText = "天氣: 颳風 💨";
+    if (weatherText != "") {
+      text(weatherText, width - 70, 10);
+    }
+  }
+}
+
+// 天氣粒子類別
+class WeatherParticle {
+  float x, y;
+  float vx, vy;
+  float size;
+  float alpha;
+  
+  WeatherParticle(int type) {
+    x = random(width);
+    y = random(-height, 0);
+    
+    if (type == 1) { // 雨
+      vx = random(-1, 1);
+      vy = random(8, 15);
+      size = random(1, 3);
+      alpha = random(100, 200);
+    } else if (type == 2) { // 雪
+      vx = random(-0.5, 0.5);
+      vy = random(1, 3);
+      size = random(3, 8);
+      alpha = random(150, 255);
+    } else if (type == 3) { // 風
+      vx = random(3, 8);
+      vy = random(-1, 1);
+      size = random(2, 5);
+      alpha = random(100, 180);
+    }
+  }
+  
+  void update(int type, float wind) {
+    // 更新位置
+    if (type == 1) { // 雨
+      x += vx + wind;
+      y += vy;
+    } else if (type == 2) { // 雪
+      x += vx + wind * 0.5 + sin(frameCount * 0.05 + x) * 0.3;
+      y += vy;
+    } else if (type == 3) { // 風
+      x += vx + wind * 3;
+      y += vy + sin(frameCount * 0.1 + x) * 0.5;
+    }
+    
+    // 重置位置
+    if (type == 1 || type == 2) {
+      if (y > height) {
+        y = random(-50, 0);
+        x = random(width);
+      }
+      if (x < 0) x = width;
+      if (x > width) x = 0;
+    } else if (type == 3) {
+      if (x > width + 50) {
+        x = -50;
+        y = random(height);
+      }
+      if (y < 0) y = height;
+      if (y > height) y = 0;
+    }
+  }
+  
+  void display(int type) {
+    noStroke();
+    
+    if (type == 1) { // 雨 - 藍色線條
+      stroke(150, 200, 255, alpha);
+      strokeWeight(size);
+      line(x, y, x - vx * 2, y - vy * 0.5);
+    } else if (type == 2) { // 雪 - 白色圓形
+      fill(255, 255, 255, alpha);
+      circle(x, y, size);
+    } else if (type == 3) { // 風 - 灰色橢圓
+      fill(200, 200, 200, alpha);
+      push();
+      translate(x, y);
+      rotate(radians(45));
+      ellipse(0, 0, size * 2, size);
+      pop();
+    }
   }
 }

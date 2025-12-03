@@ -142,7 +142,7 @@ class StageEditor {
     }
     
     if (backButton.isMouseOver()) {
-      uiStat = UI_TITLE_SCREEN;
+      uiStat = UI_STAGE_SELECTION; // 改為回到 Stage Selection
       return;
     }
     

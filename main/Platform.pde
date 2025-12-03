@@ -8,7 +8,7 @@ class Platform {
   }
   
   void display() {
-    fill(100);
+    fill(255);
     stroke(0);
     strokeWeight(2);
     rect(pos.x, pos.y, wh.x, wh.y);

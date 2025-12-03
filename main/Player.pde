@@ -382,7 +382,7 @@ class Player {
           int currentTime = frameCount;
           if (currentTime - lastJumpTime < doubleJumpWindow && jumpCount == 1) {
             // 雙擊：大跳（3倍高）
-            vel.y = -jumpForce * 3;
+            vel.y = -jumpForce * 1.1;
             jumpCount = 2;
           } else {
             // 單擊：小跳（正常高度）
@@ -396,7 +396,7 @@ class Player {
           int currentTime = frameCount;
           if (currentTime - lastJumpTime < doubleJumpWindow) {
             // 快速連按：大跳
-            vel.y = -jumpForce * 3;
+            vel.y = -jumpForce * 1.1;
             jumpCount = 2;
           }
         }
