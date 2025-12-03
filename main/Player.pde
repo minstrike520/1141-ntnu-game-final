@@ -11,6 +11,12 @@ class Player {
   color playerColor;
   int type;
   
+  // 血量系統
+  float health;
+  float maxHealth;
+  int invincibleFrame = 0;    // 無敵時間倒計時
+  final int INVINCIBLE_TIME = 60; // 無敵時間 (1秒 @ 60fps)
+  
   // Controls
   int leftKey, rightKey, jumpKey;
   char hookKeyChar;
@@ -54,6 +60,8 @@ class Player {
     this.onGround = false;
     this.playerColor = c;
     this.type = type;
+    this.maxHealth = 100;
+    this.health = maxHealth;
     
     this.leftKey = leftKey;
     this.rightKey = rightKey;
@@ -80,6 +88,11 @@ class Player {
   }
   
   void update(ArrayList<Platform> platforms, Player otherPlayer) {
+    // 更新無敵時間
+    if (invincibleFrame > 0) {
+      invincibleFrame--;
+    }
+    
     // --- 0. 炸彈人功能 ---
     if (isBomberChar) {
       // 雙跳邏輯：落地時重置跳躍次數
@@ -120,6 +133,8 @@ class Player {
             knockbackSelf.normalize();
             knockbackSelf.mult(30); // 增加擊飛力度
             vel.add(knockbackSelf);
+            // 對自己造成傷害
+            takeDamage(15);
           }
           
           // 檢查對對手的影響
@@ -144,6 +159,8 @@ class Player {
             knockback.normalize();
             knockback.mult(30); // 增加擊飛力度
             otherPlayer.vel.add(knockback);
+            // 對對手造成傷害
+            otherPlayer.takeDamage(20);
           }
         }
         
@@ -519,6 +536,9 @@ class Player {
         b.display();
       }
     }
+    
+    // 繪製血量條
+    displayHealth();
   }
   
   void handleKeyPress(int k, int kc) {
@@ -577,6 +597,51 @@ class Player {
     int temp = leftKey;
     leftKey = rightKey;
     rightKey = temp;
+  }
+  
+  void takeDamage(float damage) {
+    // 判定是否在無敵時間狀態
+    if (invincibleFrame <= 0) {
+      health -= damage;
+      if (health < 0) health = 0;
+      invincibleFrame = INVINCIBLE_TIME; // 設置無敵時間
+    }
+  }
+  
+  void displayHealth() {
+    // 繪製頭頂血量條
+    float barWidth = 60;
+    float barHeight = 8;
+    float barX = pos.x - barWidth / 2 + wh.x / 2;
+    float barY = pos.y - 15;
+    
+    // 無敵時間閃爍效果
+    if (invincibleFrame > 0 && invincibleFrame % 6 < 3) {
+      // 閃爍間隔 - 不顯示
+      return;
+    }
+    
+    // 背景條 (深黑色)
+    fill(50);
+    noStroke();
+    rect(barX, barY, barWidth, barHeight, 2);
+    
+    // 血量條 (綠色到紅色)
+    float healthPercent = health / maxHealth;
+    if (healthPercent > 0.5) {
+      fill(50, 200, 50); // 綠色
+    } else if (healthPercent > 0.25) {
+      fill(255, 200, 0); // 黃色
+    } else {
+      fill(255, 50, 50); // 紅色
+    }
+    rect(barX, barY, barWidth * healthPercent, barHeight, 2);
+    
+    // 邊框
+    stroke(200);
+    strokeWeight(1);
+    noFill();
+    rect(barX, barY, barWidth, barHeight, 2);
   }
 }
 

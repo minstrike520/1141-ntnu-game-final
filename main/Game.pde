@@ -2,6 +2,8 @@ class Game {
   Player player1;
   Player player2;
   ArrayList<Platform> platforms;
+  boolean gameOver = false;
+  int winner = 0; // 0=無, 1=玩家1勝, 2=玩家2勝
   
   
   Game(int stage, int type1, int type2) {
@@ -19,8 +21,19 @@ class Game {
   }
   
   void update() {
-    player1.update(platforms, player2);
-    player2.update(platforms, player1);
+    if (!gameOver) {
+      player1.update(platforms, player2);
+      player2.update(platforms, player1);
+      
+      // 檢查是否有玩家死亡
+      if (player1.health <= 0) {
+        gameOver = true;
+        winner = 2;
+      } else if (player2.health <= 0) {
+        gameOver = true;
+        winner = 1;
+      }
+    }
   }
   
   void display() {
@@ -63,6 +76,52 @@ class Game {
       p2Controls += " (Wizard)";
     }
     text(p2Controls, 10, 40);
+    
+    // Display health info
+    textSize(16);
+    textAlign(LEFT, TOP);
+    fill(100, 150, 255);
+    text("Player 1 HP: " + (int)player1.health + "/" + (int)player1.maxHealth, 10, 80);
+    fill(255, 150, 100);
+    text("Player 2 HP: " + (int)player2.health + "/" + (int)player2.maxHealth, 10, 100);
+    
+    // Display game over screen
+    if (gameOver) {
+      displayGameOver();
+    }
+  }
+  
+  void displayGameOver() {
+    // 半透明黑色背景
+    fill(0, 0, 0, 200);
+    noStroke();
+    rect(0, 0, width, height);
+    
+    // 遊戲結束文字
+    fill(255);
+    textSize(64);
+    textAlign(CENTER, CENTER);
+    text("GAME OVER", width / 2, height / 2 - 60);
+    
+    // 勝者文字
+    textSize(48);
+    String winnerText = "";
+    color winnerColor = color(255);
+    if (winner == 1) {
+      winnerText = "Player 1 Wins!";
+      winnerColor = color(100, 150, 255); // 藍色
+    } else if (winner == 2) {
+      winnerText = "Player 2 Wins!";
+      winnerColor = color(255, 150, 100); // 橙色
+    }
+    fill(winnerColor);
+    text(winnerText, width / 2, height / 2 + 20);
+    
+    // 按鈕提示
+    textSize(24);
+    float flashAlpha = 128 + sin(frameCount * 0.1) * 127;
+    fill(255, 255, 100, flashAlpha);
+    text("Press R to Restart", width / 2, height / 2 + 100);
   }
   
   void handleKeyPress(char k, int kc) {

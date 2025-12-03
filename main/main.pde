@@ -94,6 +94,10 @@ void keyPressed() {
   }
   else if (uiStat == UI_GAME) {
     game.handleKeyPress(key, keyCode);
+    // 按 R 重新開始遊戲
+    if (game.gameOver && (key == 'r' || key == 'R')) {
+      game = new Game(selectedStageIndex, player1Index, player2Index);
+    }
   }
   else if (uiStat == UI_STAGE_EDITOR) {
     stageEditor.keyPressed();
