@@ -50,6 +50,7 @@ void draw() {
     game.update();
     game.display();
     // 顯示除錯資訊
+    fill(0);
     text("palyer1Index: " + player1Index, 10, height - 40);
     text("palyer2Index: " + player2Index, 10, height - 20);
   } else if (uiStat == UI_STAGE_EDITOR) {

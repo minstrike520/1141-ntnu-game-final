@@ -1,4 +1,7 @@
 class Player {
+  // 遊戲實例參考
+  Game gameInstance;
+  
   PVector pos;
   PVector wh;
   PVector baseWh;
@@ -12,8 +15,9 @@ class Player {
   int type;
   
   // Controls
-  int leftKey, rightKey, jumpKey;
+  int leftKey, rightKey, jumpKey,attcackKey;
   char hookKeyChar;
+  char bombKeyChar;
   boolean movingLeft, movingRight, jumping;
   boolean tryingToHook;
 
@@ -30,8 +34,16 @@ class Player {
   float maxHookLen = 500;     // 鎖鏈最大長度
   // ------------------
 
+  // --- 血量系統 ---
+  float maxHealth = 100;
+  float health = 100;
+  int invincibleFrame = 0; // 無敵時間
+  final int INVINCIBLE_TIME = 30; // 30幀無敵
+  // ------------------
+
   
-  Player(float x, float y, color c, int leftKey, int rightKey, int jumpKey, char hk, int type) {
+  Player(float x, float y, color c, int leftKey, int rightKey, int jumpKey,int attcackKey, char hk, int type) {
+    this.gameInstance = null; // 稍後由 Game 類設置
     this.pos = new PVector(x, y);
     this.baseWh = new PVector(30, 40);
     this.wh = baseWh.copy();
@@ -47,10 +59,12 @@ class Player {
     this.leftKey = leftKey;
     this.rightKey = rightKey;
     this.jumpKey = jumpKey;
+    this.attcackKey = attcackKey;
     this.movingLeft = false;
     this.movingRight = false;
     this.jumping = false;
     this.hookKeyChar = hk;
+    this.bombKeyChar = (char)attcackKey; // 轉換攻擊鍵為 char
 
     this.hookPos = new PVector(0,0);
     this.hookDir = new PVector(0,0);
@@ -61,6 +75,10 @@ class Player {
   }
   
   void update(ArrayList<Platform> platforms, Player otherPlayer) {
+    // 更新無敫狂武時間
+    if (invincibleFrame > 0) {
+      invincibleFrame--;
+    }
     // --- 1. 聲控大小調整 ---
     if (isMicChar) {
       float vol = analyzer.analyze();
@@ -390,6 +408,13 @@ class Player {
     if (isMicChar && (Character.toLowerCase((char)k) == hookKeyChar)) {
       tryingToHook = true;
     }
+    
+    // 檢查是否按下炸彈鍵 (只有顛倒人type=1才能使用)
+    if (this.type == 1 && Character.toLowerCase((char)k) == bombKeyChar) {
+      if (gameInstance != null) {
+        gameInstance.throwBomb(this);
+      }
+    }
   }
   
   void handleKeyRelease(int k, int kc) {
@@ -417,5 +442,50 @@ class Player {
     int temp = leftKey;
     leftKey = rightKey;
     rightKey = temp;
+  }
+  
+  void takeDamage(float damage) {
+    // 判定是否在無敫狂武狀態
+    if (invincibleFrame <= 0) {
+      health -= damage;
+      if (health < 0) health = 0;
+      invincibleFrame = INVINCIBLE_TIME; // 設置無敫狂武時間
+    }
+  }
+  
+  void displayHealth() {
+    // 纁電遪桨血量条
+    float barWidth = 60;
+    float barHeight = 8;
+    float barX = pos.x - barWidth / 2 + wh.x / 2;
+    float barY = pos.y - 15;
+    
+    // 血量時間跃動效果 (無敫狂武時间閉焉)
+    if (invincibleFrame > 0 && invincibleFrame % 6 < 3) {
+      // 字閙间閉焔 - 不顯示
+      return;
+    }
+    
+    // 背景衲 (靜黑赫)
+    fill(50);
+    noStroke();
+    rect(barX, barY, barWidth, barHeight, 2);
+    
+    // 血量条 (開後贺绚到紫贺)
+    float healthPercent = health / maxHealth;
+    if (healthPercent > 0.5) {
+      fill(50, 200, 50); // 綠色
+    } else if (healthPercent > 0.25) {
+      fill(255, 200, 0); // 黃贺
+    } else {
+      fill(255, 50, 50); // 紅贺
+    }
+    rect(barX, barY, barWidth * healthPercent, barHeight, 2);
+    
+    // 邊框
+    stroke(200);
+    strokeWeight(1);
+    noFill();
+    rect(barX, barY, barWidth, barHeight, 2);
   }
 }
