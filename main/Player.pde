@@ -575,7 +575,8 @@ class Player {
     }
     
     // 檢查是否按下攻擊鍵（拋擲炸彈 - type 1）
-    if (type == 1 && (Character.toLowerCase((char)k) == attackKeyChar)) {
+    // 忍者 (type==1) 的技能改為使用放置炸彈鍵 (bombKeyChar)，即 E / K
+    if (type == 1 && (Character.toLowerCase((char)k) == bombKeyChar)) {
       if (gameInstance != null) {
         gameInstance.throwBomb(this);
       }

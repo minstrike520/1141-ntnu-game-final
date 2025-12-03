@@ -86,6 +86,27 @@ void mouseReleased() {
 }
 
 void keyPressed() {
+  // 全域 ESC 行為：回到上一頁（若在遊戲中則回到主畫面）
+  if (key == ESC) {
+    key = 0; // 阻止 Processing 的預設 ESC 行為
+    if (uiStat == UI_GAME) {
+      uiStat = UI_TITLE_SCREEN;
+      if (startBackgroundGif != null) startBackgroundGif.loop();
+      game = null;
+      return;
+    } else if (uiStat == UI_STAGE_SELECTION) {
+      uiStat = UI_CHARACTER_SELECTION;
+      return;
+    } else if (uiStat == UI_CHARACTER_SELECTION) {
+      uiStat = UI_TITLE_SCREEN;
+      if (startBackgroundGif != null) startBackgroundGif.loop();
+      return;
+    } else if (uiStat == UI_STAGE_EDITOR) {
+      uiStat = UI_TITLE_SCREEN;
+      if (startBackgroundGif != null) startBackgroundGif.loop();
+      return;
+    }
+  }
   if (uiStat == UI_CHARACTER_SELECTION) {
     characterSelectorKeyPressed();
   }

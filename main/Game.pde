@@ -109,9 +109,10 @@ class Game {
     if (player1.type == 0) {
       p1Controls += ", E=Bomb (Double Jump for 3x high!)";
     } else if (player1.type == 1) {
-      p1Controls += ", V=Throw Bomb (Ninja)";
+      p1Controls += ", E=Throw Bomb (Ninja)";
     } else if (player1.type == 2) {
       p1Controls += " (Knight)";
+      p1Controls += ", E=Hook (Rope)";
     } else if (player1.type == 3) {
       p1Controls += " (Wizard)";
     }
@@ -122,9 +123,10 @@ class Game {
     if (player2.type == 0) {
       p2Controls += ", K=Bomb (Double Jump for 3x high!)";
     } else if (player2.type == 1) {
-      p2Controls += ", M=Throw Bomb (Ninja)";
+      p2Controls += ", K=Throw Bomb (Ninja)";
     } else if (player2.type == 2) {
       p2Controls += " (Knight)";
+      p2Controls += ", K=Hook (Rope)";
     } else if (player2.type == 3) {
       p2Controls += " (Wizard)";
     }
