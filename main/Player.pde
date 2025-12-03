@@ -48,6 +48,14 @@ class Player {
   int maxBombs = 3;           // 最多同時存在的炸彈數
   boolean jumpPressed = false; // 記錄跳躍鍵是否已按下（防止長按）
   Game gameInstance = null;   // 遊戲實例引用（用於拋擲炸彈）
+    
+  // 角色四變數
+  boolean isFreezeChar = false;
+  boolean isFrozen = false;
+  int freezeTimer = 0;
+  int moveTimeLimit = 300;  // 5秒 (60fps * 5)
+  int freezeDuration = 120; // 2秒 (60fps * 2)
+  ArrayList<Bullet> bullets = new ArrayList<Bullet>();
   // ------------------
 
   
@@ -89,6 +97,22 @@ class Player {
     this.isBomberChar = true;
     // 炸彈人移動速度設為70%
     this.speed = this.baseSpeed * 0.7;
+  }
+
+  void setFreezeMode() {
+    this.isFreezeChar = true;
+  }
+  
+  void fire8Directions() {
+    float cx = pos.x + wh.x / 2;
+    float cy = pos.y + wh.y / 2;
+    float[][] dirs = {
+      {0, -1}, {0, 1}, {-1, 0}, {1, 0},    // 上下左右
+      {-1, -1}, {-1, 1}, {1, -1}, {1, 1}   // 四個角落
+    };
+    for (float[] dir : dirs) {
+      bullets.add(new Bullet(cx, cy, dir[0], dir[1]));
+    }
   }
   
   void update(ArrayList<Platform> platforms, Player otherPlayer) {
@@ -288,9 +312,48 @@ class Player {
         }
       }
     }
+    // 3.角色四凍結和子彈
+    if (isFreezeChar) {
+      freezeTimer++;
+      
+      // A. 處理凍結狀態
+      if (!isFrozen) {
+        // 倒數計時中
+        if (freezeTimer > moveTimeLimit) { 
+          isFrozen = true;
+          freezeTimer = 0;
+          vel.set(0, 0);     // 瞬間煞車
+          fire8Directions(); // 觸發攻擊：發射子彈！
+        }
+      } else {
+        // 凍結期間 (無法移動)
+        vel.set(0, 0); 
+        if (freezeTimer > freezeDuration) { 
+          isFrozen = false;
+          freezeTimer = 0;
+        }
+      }
+      
+      // B. 更新子彈與判定命中
+      for (int i = bullets.size() - 1; i >= 0; i--) {
+        Bullet b = bullets.get(i);
+        b.update();
+        
+        // 檢查是否打中對手
+        if (b.pos.x > otherPlayer.pos.x && b.pos.x < otherPlayer.pos.x + otherPlayer.wh.x &&
+            b.pos.y > otherPlayer.pos.y && b.pos.y < otherPlayer.pos.y + otherPlayer.wh.y) {
+            
+          otherPlayer.takeDamage(34); // 扣除大量血量
+          b.active = false;
+        }
+        
+        if (!b.active) bullets.remove(i);
+      }
+    }
+
     // -------------------------
     // 一般物理運動 (若被鎖鏈拉，vel 已經被改變了)
-    if (!isHooked) { 
+    if (!isHooked && !isFrozen) { 
       // 沒用鎖鏈時才完全由按鍵控制左右速度 (否則會破壞擺盪慣性)
       // 我們加上一個緩衝，如果是擺盪後剛放開，不要馬上把 vel.x 歸零
       if (movingLeft) vel.x = -speed;
@@ -299,7 +362,9 @@ class Player {
       else vel.x *= 0.98; // 空氣阻力
     }
 
-    vel.y += gravity;
+    if (!isFrozen) {
+      vel.y += gravity;
+    }
     if (vel.y > 15) vel.y = 15;
 
     // Limit fall speed
@@ -340,7 +405,7 @@ class Player {
       }
     }
     // 一般角色跳躍
-    else if (jumping && onGround) {
+    else if (jumping && onGround && !isFrozen) {
       vel.y = -jumpForce;
       onGround = false;
     }
@@ -542,6 +607,17 @@ class Player {
     if (isBomberChar) {
       for (Bomb b : bombs) {
         b.display();
+      }
+    }
+    // 繪製子彈
+    if (isFreezeChar) {
+      for (Bullet b : bullets) {
+        b.display();
+      }
+      // 凍結時的視覺提示
+      if (isFrozen) {
+        fill(0, 200, 255, 100);
+        rect(pos.x - 5, pos.y - 5, wh.x + 10, wh.y + 10);
       }
     }
     
@@ -815,5 +891,32 @@ class ThrowBomb {
       fill(255, 100, 0, 100);
       ellipse(pos.x, pos.y, explosionRadius * 1.5, explosionRadius * 1.5);
     }
+  }
+}
+class Bullet {
+  PVector pos;
+  PVector vel;
+  float size = 15;
+  boolean active = true;
+
+  Bullet(float x, float y, float vx, float vy) {
+    pos = new PVector(x, y);
+    vel = new PVector(vx, vy);
+    vel.normalize();
+    vel.mult(3); // 子彈速度
+  }
+
+  void update() {
+    pos.add(vel);
+    // 超出畫面就消失
+    if (pos.x < 0 || pos.x > width || pos.y < 0 || pos.y > height) {
+      active = false;
+    }
+  }
+
+  void display() {
+    fill(255, 255, 0); // 黃色子彈
+    noStroke();
+    ellipse(pos.x, pos.y, size, size);
   }
 }

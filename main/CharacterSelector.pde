@@ -157,6 +157,8 @@ void applyCharacterSettings() {
       game.player1.setInvertedControls();
   } else if (player1Index == 2) { // 聲控巨人
       game.player1.setMicMode();
+  } else if (player1Index == 3) { // 四
+      game.player1.setFreezeMode();
   }
   
   // --- P2 設定 ---
@@ -164,5 +166,7 @@ void applyCharacterSettings() {
       game.player2.setInvertedControls();
   } else if (player2Index == 2) { 
       game.player2.setMicMode();
+  } else if (player2Index == 3) { 
+      game.player2.setFreezeMode();
   }
 }
