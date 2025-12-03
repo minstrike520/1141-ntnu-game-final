@@ -204,8 +204,10 @@ class Player {
       
       // 踩死對手邏輯 (保持不變)
       if (currentScale > 1.5 && checkCollision(otherPlayer)) {
-         otherPlayer.pos.set(width/2, 50);
-         otherPlayer.vel.set(0, 0);
+        otherPlayer.pos.set(width/2, 50);
+        otherPlayer.vel.set(0, 0);
+        // 如果我是騎士 (type==2)，在踩到對手時額外造成 40 點傷害（會被 invincibleFrame 保護）
+        otherPlayer.takeDamage(40);
       }
     }
 
@@ -395,6 +397,8 @@ class Player {
       vel.y = 0;
       onGround = true;
     }
+
+    // (已將騎士傷害合併至踩死邏輯中，故移除此處的獨立判定)
   }
 
   boolean checkCollision(Player other) {

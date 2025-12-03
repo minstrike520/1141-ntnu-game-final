@@ -93,10 +93,25 @@ void keyPressed() {
     stageSelectorKeyPressed();
   }
   else if (uiStat == UI_GAME) {
+    // 按 ESC 中斷遊戲並回到主畫面
+    if (key == ESC) {
+      key = 0; // 阻止 Processing 的預設 ESC 行為
+      uiStat = UI_TITLE_SCREEN;
+      // 恢復標題畫面 GIF（如果有的話）
+      if (startBackgroundGif != null) {
+        startBackgroundGif.loop();
+      }
+      // 清除當前遊戲實例以完全中斷
+      game = null;
+      return;
+    }
+
     game.handleKeyPress(key, keyCode);
-    // 按 R 重新開始遊戲
+    // 在遊戲結束時按 R 回到角色選單（以重新選角色與地圖）
     if (game.gameOver && (key == 'r' || key == 'R')) {
-      game = new Game(selectedStageIndex, player1Index, player2Index);
+      uiStat = UI_CHARACTER_SELECTION;
+      // 清除當前遊戲，避免殘留的玩家狀態影響下一局
+      game = null;
     }
   }
   else if (uiStat == UI_STAGE_EDITOR) {
