@@ -40,15 +40,18 @@ class Player {
   int jumpCount = 0;          // 跳躍次數（0=在地面，1=單跳，2=雙跳）
   int lastJumpTime = 0;       // 最後一次跳躍的時間
   int doubleJumpWindow = 20;  // 雙擊判定時間窗口（約0.33秒）
-  char bombKeyChar;           // 炸彈按鍵
+  char bombKeyChar;           // 炸彈按鍵（放置炸彈）
+  char attackKeyChar;         // 攻擊鍵（拋擲炸彈）
   boolean tryingToBomb = false;
-  ArrayList<Bomb> bombs;      // 炸彈列表
+  boolean tryingToAttack = false;
+  ArrayList<Bomb> bombs;      // 炸彈列表（放置型）
   int maxBombs = 3;           // 最多同時存在的炸彈數
   boolean jumpPressed = false; // 記錄跳躍鍵是否已按下（防止長按）
+  Game gameInstance = null;   // 遊戲實例引用（用於拋擲炸彈）
   // ------------------
 
   
-  Player(float x, float y, color c, int leftKey, int rightKey, int jumpKey, char hk, int type) {
+  Player(float x, float y, color c, int leftKey, int rightKey, int jumpKey, char attackKey, char bombKey, int type) {
     this.pos = new PVector(x, y);
     this.baseWh = new PVector(30, 40);
     this.wh = baseWh.copy();
@@ -69,8 +72,9 @@ class Player {
     this.movingLeft = false;
     this.movingRight = false;
     this.jumping = false;
-    this.hookKeyChar = hk;
-    this.bombKeyChar = hk;
+    this.hookKeyChar = bombKey;
+    this.bombKeyChar = bombKey;
+    this.attackKeyChar = attackKey;
 
     this.hookPos = new PVector(0,0);
     this.hookDir = new PVector(0,0);
@@ -561,9 +565,16 @@ class Player {
       tryingToHook = true;
     }
     
-    // 檢查是否按下炸彈鍵
+    // 檢查是否按下炸彈鍵（放置炸彈 - type 0）
     if (isBomberChar && (Character.toLowerCase((char)k) == bombKeyChar)) {
       tryingToBomb = true;
+    }
+    
+    // 檢查是否按下攻擊鍵（拋擲炸彈 - type 1）
+    if (type == 1 && (Character.toLowerCase((char)k) == attackKeyChar)) {
+      if (gameInstance != null) {
+        gameInstance.throwBomb(this);
+      }
     }
   }
   
@@ -712,6 +723,92 @@ class Bomb {
       // 內圈（紅色）
       fill(255, 50, 0, 100 * (1 - explosionScale));
       ellipse(pos.x, pos.y, currentRadius, currentRadius);
+    }
+  }
+}
+
+// ==================== 拋擲炸彈類別 ====================
+class ThrowBomb {
+  PVector pos;
+  PVector vel;
+  float radius = 8;
+  float gravity = 0.5;
+  boolean exploded = false;
+  int throwFrame = 10; // 拋出後的無敵時間
+  float explosionRadius = 80;
+  
+  ThrowBomb(float x, float y, float vx, float vy) {
+    this.pos = new PVector(x, y);
+    this.vel = new PVector(vx, vy);
+  }
+  
+  void update(ArrayList<Platform> platforms) {
+    if (!exploded) {
+      if (throwFrame > 0) throwFrame--;
+      
+      // 應用重力
+      vel.y += gravity;
+      pos.add(vel);
+      
+      // 檢查與平台碰撞
+      for (Platform p : platforms) {
+        if (pos.x > p.pos.x && pos.x < p.pos.x + p.wh.x &&
+            pos.y + radius > p.pos.y && pos.y - radius < p.pos.y + p.wh.y) {
+          exploded = true;
+          return;
+        }
+      }
+      
+      // 檢查邊界碰撞
+      if (pos.x < radius || pos.x > width - radius ||
+          pos.y < radius || pos.y > height - radius) {
+        exploded = true;
+      }
+    }
+  }
+  
+  boolean checkPlayerCollision(Player p) {
+    return dist(pos.x, pos.y, p.pos.x + p.wh.x/2, p.pos.y + p.wh.y/2) < radius + max(p.wh.x, p.wh.y)/2;
+  }
+  
+  void applyBlastToPlayer(Player p) {
+    float d = dist(pos.x, pos.y, p.pos.x + p.wh.x/2, p.pos.y + p.wh.y/2);
+    if (d < explosionRadius) {
+      // 計算擊飛方向
+      PVector knockback = new PVector(
+        p.pos.x + p.wh.x/2 - pos.x,
+        p.pos.y + p.wh.y/2 - pos.y
+      );
+      knockback.normalize();
+      knockback.mult(15); // 擊飛力度
+      p.vel.add(knockback);
+      
+      // 造成傷害
+      p.takeDamage(25);
+    }
+  }
+  
+  void display() {
+    if (!exploded) {
+      fill(50);
+      stroke(0);
+      strokeWeight(2);
+      ellipse(pos.x, pos.y, radius * 2, radius * 2);
+      
+      // 導火線
+      stroke(255, 100, 0);
+      line(pos.x, pos.y, pos.x, pos.y - 10);
+    }
+  }
+  
+  void displayExplosion() {
+    if (exploded) {
+      // 爆炸效果
+      noStroke();
+      fill(255, 200, 0, 150);
+      ellipse(pos.x, pos.y, explosionRadius * 2, explosionRadius * 2);
+      fill(255, 100, 0, 100);
+      ellipse(pos.x, pos.y, explosionRadius * 1.5, explosionRadius * 1.5);
     }
   }
 }
