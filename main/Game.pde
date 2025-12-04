@@ -8,10 +8,9 @@ class Game {
   boolean gameOver = false;
   int winner = 0;
   
-  // 天氣特效系統
-  int weatherType; // 0=無, 1=下雨, 2=飄雪, 3=颳風
+  int weatherType;
   ArrayList<WeatherParticle> weatherParticles;
-  float windForce = 0; // 風力
+  float windForce = 0;
   
   Game(int stageIndex, int type1, int type2) {
     player1 = new Player(100, 100, color(100, 150, 255), 'a', 'd', 'w', 'v', 'e', type1);
@@ -26,32 +25,28 @@ class Game {
     platforms = stageList.get(stageIndex).platforms;
     throwBombs = new ArrayList<ThrowBomb>();
     
-    // 隨機選擇天氣 (30% 機率無天氣)
     float rand = random(1);
     if (rand < 0.3) {
-      weatherType = 0; // 無天氣
+      weatherType = 0;
     } else if (rand < 0.5) {
-      weatherType = 1; // 下雨
+      weatherType = 1;
     } else if (rand < 0.7) {
-      weatherType = 2; // 飄雪
+      weatherType = 2;
     } else {
-      weatherType = 3; // 颳風
+      weatherType = 3;
     }
     
-    // 初始化天氣粒子
     weatherParticles = new ArrayList<WeatherParticle>();
     initWeatherParticles();
   }
   
   void update() {
     if (!gameOver) {
-      // 更新天氣特效
       updateWeather();
       
       player1.update(platforms, player2);
       player2.update(platforms, player1);
       
-      // 風力影響玩家
       if (weatherType == 3) {
         player1.vel.x += windForce;
         player2.vel.x += windForce;
@@ -101,25 +96,20 @@ class Game {
   }
   
   void display() {
-    // Display platforms
     for (Platform p : platforms) {
       p.display();
     }
     
-    // Display players
     player1.display();
     player2.display();
     
-    // Display throw bombs
     for (ThrowBomb b : throwBombs) {
       b.display();
       b.displayExplosion();
     }
     
-    // Display weather effects
     displayWeather();
     
-    // Display game over screen
     if (gameOver) {
       displayGameOver();
     }
@@ -128,12 +118,12 @@ class Game {
   void displayGameOver() {
     fill(0, 0, 0, 200);
     noStroke();
-    rect(0, 0, width, height);
+    rect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
     
     fill(255);
     textSize(64);
     textAlign(CENTER, CENTER);
-    text("GAME OVER", width / 2, height / 2 - 60);
+    text("GAME OVER", DESIGN_WIDTH / 2, DESIGN_HEIGHT / 2 - 60);
     
     textSize(48);
     String winnerText = "";
@@ -146,12 +136,12 @@ class Game {
       winnerColor = color(255, 150, 100);
     }
     fill(winnerColor);
-    text(winnerText, width / 2, height / 2 + 20);
+    text(winnerText, DESIGN_WIDTH / 2, DESIGN_HEIGHT / 2 + 20);
     
     textSize(24);
     float flashAlpha = 128 + sin(frameCount * 0.1) * 127;
     fill(255, 255, 100, flashAlpha);
-    text("Press R to Restart", width / 2, height / 2 + 100);
+    text("Press R to Restart", DESIGN_WIDTH / 2, DESIGN_HEIGHT / 2 + 100);
   }
   
   void handleKeyPress(char k, int kc) {
@@ -180,7 +170,6 @@ class Game {
     float bombVx = direction * speed * cos(angleRad) + player.vel.x * 0.3;
     float bombVy = -speed * sin(angleRad);
     
-    // 風力影響炸彈
     if (weatherType == 3) {
       bombVx += windForce * 2;
     }
@@ -189,38 +178,32 @@ class Game {
     throwBombs.add(newBomb);
   }
   
-  // 初始化天氣粒子
   void initWeatherParticles() {
     int particleCount = 0;
-    if (weatherType == 1) particleCount = 150; // 雨滴數量
-    else if (weatherType == 2) particleCount = 100; // 雪花數量
-    else if (weatherType == 3) particleCount = 80; // 風中的葉子/灰塵
+    if (weatherType == 1) particleCount = 150;
+    else if (weatherType == 2) particleCount = 100;
+    else if (weatherType == 3) particleCount = 80;
     
     for (int i = 0; i < particleCount; i++) {
       weatherParticles.add(new WeatherParticle(weatherType));
     }
   }
   
-  // 更新天氣
   void updateWeather() {
-    // 更新風力（颳風時風力會波動）
     if (weatherType == 3) {
       windForce = sin(frameCount * 0.02) * 0.3 + cos(frameCount * 0.05) * 0.2;
     }
     
-    // 更新天氣粒子
     for (WeatherParticle p : weatherParticles) {
       p.update(weatherType, windForce);
     }
   }
   
-  // 顯示天氣特效
   void displayWeather() {
     for (WeatherParticle p : weatherParticles) {
       p.display(weatherType);
     }
     
-    // 顯示天氣提示
     fill(255, 255, 255, 150);
     textSize(14);
     textAlign(RIGHT, TOP);
@@ -229,12 +212,11 @@ class Game {
     else if (weatherType == 2) weatherText = "天氣: 飄雪 ❄";
     else if (weatherType == 3) weatherText = "天氣: 颳風 💨";
     if (weatherText != "") {
-      text(weatherText, width - 70, 10);
+      text(weatherText, DESIGN_WIDTH - 70, 10);
     }
   }
 }
 
-// 天氣粒子類別
 class WeatherParticle {
   float x, y;
   float vx, vy;
@@ -242,20 +224,20 @@ class WeatherParticle {
   float alpha;
   
   WeatherParticle(int type) {
-    x = random(width);
-    y = random(-height, 0);
+    x = random(DESIGN_WIDTH);
+    y = random(-DESIGN_HEIGHT, 0);
     
-    if (type == 1) { // 雨
+    if (type == 1) {
       vx = random(-1, 1);
       vy = random(8, 15);
       size = random(1, 3);
       alpha = random(100, 200);
-    } else if (type == 2) { // 雪
+    } else if (type == 2) {
       vx = random(-0.5, 0.5);
       vy = random(1, 3);
       size = random(3, 8);
       alpha = random(150, 255);
-    } else if (type == 3) { // 風
+    } else if (type == 3) {
       vx = random(3, 8);
       vy = random(-1, 1);
       size = random(2, 5);
@@ -264,47 +246,45 @@ class WeatherParticle {
   }
   
   void update(int type, float wind) {
-    // 更新位置
-    if (type == 1) { // 雨
+    if (type == 1) {
       x += vx + wind;
       y += vy;
-    } else if (type == 2) { // 雪
+    } else if (type == 2) {
       x += vx + wind * 0.5 + sin(frameCount * 0.05 + x) * 0.3;
       y += vy;
-    } else if (type == 3) { // 風
+    } else if (type == 3) {
       x += vx + wind * 3;
       y += vy + sin(frameCount * 0.1 + x) * 0.5;
     }
     
-    // 重置位置
     if (type == 1 || type == 2) {
-      if (y > height) {
+      if (y > DESIGN_HEIGHT) {
         y = random(-50, 0);
-        x = random(width);
+        x = random(DESIGN_WIDTH);
       }
-      if (x < 0) x = width;
-      if (x > width) x = 0;
+      if (x < 0) x = DESIGN_WIDTH;
+      if (x > DESIGN_WIDTH) x = 0;
     } else if (type == 3) {
-      if (x > width + 50) {
+      if (x > DESIGN_WIDTH + 50) {
         x = -50;
-        y = random(height);
+        y = random(DESIGN_HEIGHT);
       }
-      if (y < 0) y = height;
-      if (y > height) y = 0;
+      if (y < 0) y = DESIGN_HEIGHT;
+      if (y > DESIGN_HEIGHT) y = 0;
     }
   }
   
   void display(int type) {
     noStroke();
     
-    if (type == 1) { // 雨 - 藍色線條
+    if (type == 1) {
       stroke(150, 200, 255, alpha);
       strokeWeight(size);
       line(x, y, x - vx * 2, y - vy * 0.5);
-    } else if (type == 2) { // 雪 - 白色圓形
+    } else if (type == 2) {
       fill(255, 255, 255, alpha);
       circle(x, y, size);
-    } else if (type == 3) { // 風 - 灰色橢圓
+    } else if (type == 3) {
       fill(200, 200, 200, alpha);
       push();
       translate(x, y);

@@ -5,7 +5,6 @@ void setupStageEditor() {
   stageEditor = new StageEditor();
 }
 
-// Stage Editor for creating and editing platforms
 class StageEditor {
   ArrayList<Platform> platforms;
   Platform selectedPlatform;
@@ -15,7 +14,6 @@ class StageEditor {
   int gridSize = 10;
   boolean snapToGrid = true;
   
-  // UI Elements
   Button addButton;
   Button removeButton;
   Button exportButton;
@@ -23,7 +21,6 @@ class StageEditor {
   Button backButton;
   Button gridToggleButton;
   
-  // Default platform size for new platforms
   float defaultWidth = 100;
   float defaultHeight = 20;
   
@@ -34,37 +31,35 @@ class StageEditor {
     isDragging = false;
     dragOffset = new PVector(0, 0);
     
-    // Initialize UI buttons
     addButton = new Button(20, 20, 100, 40, "Add Platform");
     removeButton = new Button(130, 20, 120, 40, "Remove");
     exportButton = new Button(260, 20, 100, 40, "export");
     appendButton = new Button(370, 20, 120, 40, "append to game");
-    backButton = new Button(width - 120, 20, 100, 40, "Back");
+    backButton = new Button(DESIGN_WIDTH - 120, 20, 100, 40, "Back");
     gridToggleButton = new Button(500, 20, 120, 40, "Grid: ON");
   }
   
   void update() {
-    // Update UI buttons
-    addButton.update();
-    removeButton.update();
-    exportButton.update();
-    appendButton.update();
-    backButton.update();
-    gridToggleButton.update();
+    float mx = screenToDesignX(mouseX);
+    float my = screenToDesignY(mouseY);
+    
+    addButton.update(mx, my);
+    removeButton.update(mx, my);
+    exportButton.update(mx, my);
+    appendButton.update(mx, my);
+    backButton.update(mx, my);
+    gridToggleButton.update(mx, my);
   }
   
   void display() {
     background(220);
     
-    // Draw grid if enabled
     if (snapToGrid) {
       drawGrid();
     }
     
-    // Draw all platforms
     for (Platform p : platforms) {
       if (p == selectedPlatform) {
-        // Highlight selected platform
         fill(100, 200, 255);
       } else {
         fill(100);
@@ -73,7 +68,6 @@ class StageEditor {
       strokeWeight(2);
       rect(p.pos.x, p.pos.y, p.wh.x, p.wh.y);
       
-      // Show dimensions on selected platform
       if (p == selectedPlatform) {
         fill(0);
         textAlign(CENTER, CENTER);
@@ -82,7 +76,6 @@ class StageEditor {
       }
     }
     
-    // Draw UI
     addButton.display();
     removeButton.display();
     exportButton.display();
@@ -90,7 +83,6 @@ class StageEditor {
     backButton.display();
     gridToggleButton.display();
     
-    // Draw instructions
     fill(0);
     textAlign(LEFT, TOP);
     textSize(14);
@@ -107,53 +99,52 @@ class StageEditor {
     stroke(200);
     strokeWeight(1);
     
-    // Vertical lines
-    for (int x = 0; x < width; x += gridSize) {
-      line(x, 0, x, height);
+    for (int x = 0; x < DESIGN_WIDTH; x += gridSize) {
+      line(x, 0, x, DESIGN_HEIGHT);
     }
     
-    // Horizontal lines
-    for (int y = 0; y < height; y += gridSize) {
-      line(0, y, width, y);
+    for (int y = 0; y < DESIGN_HEIGHT; y += gridSize) {
+      line(0, y, DESIGN_WIDTH, y);
     }
   }
   
   void mousePressed() {
-    // Check UI buttons first
-    if (addButton.isMouseOver()) {
+    float mx = screenToDesignX(mouseX);
+    float my = screenToDesignY(mouseY);
+    
+    if (addButton.isMouseOver(mx, my)) {
       addPlatform();
       return;
     }
     
-    if (removeButton.isMouseOver() && selectedPlatform != null) {
+    if (removeButton.isMouseOver(mx, my) && selectedPlatform != null) {
       platforms.remove(selectedPlatform);
       selectedPlatform = null;
       return;
     }
     
-    if (exportButton.isMouseOver()) {
+    if (exportButton.isMouseOver(mx, my)) {
       exportCode();
       return;
     }
 
-    if (appendButton.isMouseOver()) {
+    if (appendButton.isMouseOver(mx, my)) {
       append();
       return;
     }
     
-    if (backButton.isMouseOver()) {
-      uiStat = UI_STAGE_SELECTION; // 改為回到 Stage Selection
+    if (backButton.isMouseOver(mx, my)) {
+      uiStat = UI_STAGE_SELECTION;
       return;
     }
     
-    if (gridToggleButton.isMouseOver()) {
+    if (gridToggleButton.isMouseOver(mx, my)) {
       snapToGrid = !snapToGrid;
       gridToggleButton.label = snapToGrid ? "Grid: ON" : "Grid: OFF";
       return;
     }
     
-    // Check if clicking on a platform
-    PVector mouse = new PVector(mouseX, mouseY);
+    PVector mouse = new PVector(mx, my);
     selectedPlatform = null;
     
     for (int i = platforms.size() - 1; i >= 0; i--) {
@@ -162,7 +153,7 @@ class StageEditor {
         selectedPlatform = p;
         draggedPlatform = p;
         isDragging = true;
-        dragOffset = new PVector(mouseX - p.pos.x, mouseY - p.pos.y);
+        dragOffset = new PVector(mx - p.pos.x, my - p.pos.y);
         break;
       }
     }
@@ -170,16 +161,19 @@ class StageEditor {
   
   void mouseDragged() {
     if (isDragging && draggedPlatform != null) {
-      float newX = mouseX - dragOffset.x;
-      float newY = mouseY - dragOffset.y;
+      float mx = screenToDesignX(mouseX);
+      float my = screenToDesignY(mouseY);
+      
+      float newX = mx - dragOffset.x;
+      float newY = my - dragOffset.y;
       
       if (snapToGrid) {
         newX = round(newX / gridSize) * gridSize;
         newY = round(newY / gridSize) * gridSize;
       }
       
-      draggedPlatform.pos.x = constrain(newX, 0, width - draggedPlatform.wh.x);
-      draggedPlatform.pos.y = constrain(newY, 0, height - draggedPlatform.wh.y);
+      draggedPlatform.pos.x = constrain(newX, 0, DESIGN_WIDTH - draggedPlatform.wh.x);
+      draggedPlatform.pos.y = constrain(newY, 0, DESIGN_HEIGHT - draggedPlatform.wh.y);
     }
   }
   
@@ -189,8 +183,8 @@ class StageEditor {
   }
   
   void addPlatform() {
-    float x = width / 2 - defaultWidth / 2;
-    float y = height / 2 - defaultHeight / 2;
+    float x = DESIGN_WIDTH / 2 - defaultWidth / 2;
+    float y = DESIGN_HEIGHT / 2 - defaultHeight / 2;
     
     if (snapToGrid) {
       x = round(x / gridSize) * gridSize;
@@ -217,7 +211,6 @@ class StageEditor {
     println("}");
     println("// ===== END EXPORTED CODE =====\n");
     
-    // Show confirmation
     println("Code exported to console! Copy and paste into Game.pde");
   }
 
@@ -230,7 +223,6 @@ class StageEditor {
     if (selectedPlatform != null) {
       float moveAmount = keyPressed && keyCode == SHIFT ? 1 : gridSize;
       
-      // Arrow keys to move selected platform
       if (keyCode == LEFT) {
         selectedPlatform.pos.x -= moveAmount;
       } else if (keyCode == RIGHT) {
@@ -241,7 +233,6 @@ class StageEditor {
         selectedPlatform.pos.y += moveAmount;
       }
       
-      // WASD to resize selected platform
       if (key == 'a' || key == 'A') {
         selectedPlatform.wh.x = max(20, selectedPlatform.wh.x - moveAmount);
       } else if (key == 'd' || key == 'D') {
@@ -252,7 +243,6 @@ class StageEditor {
         selectedPlatform.wh.y += moveAmount;
       }
       
-      // Delete key to remove selected platform
       if (keyCode == DELETE || keyCode == BACKSPACE) {
         platforms.remove(selectedPlatform);
         selectedPlatform = null;
@@ -261,13 +251,13 @@ class StageEditor {
   }
 }
 
-// Simple Button class for UI
 class Button {
   float x, y, w, h;
   String label;
   color normalColor = color(150);
   color hoverColor = color(200);
   color textColor = color(0);
+  boolean isHovered = false;
   
   Button(float x, float y, float w, float h, String label) {
     this.x = x;
@@ -277,13 +267,12 @@ class Button {
     this.label = label;
   }
   
-  void update() {
-    // Button behavior can be expanded here
+  void update(float mx, float my) {
+    isHovered = isMouseOver(mx, my);
   }
   
   void display() {
-    // Draw button background
-    if (isMouseOver()) {
+    if (isHovered) {
       fill(hoverColor);
     } else {
       fill(normalColor);
@@ -292,14 +281,13 @@ class Button {
     strokeWeight(2);
     rect(x, y, w, h, 5);
     
-    // Draw label
     fill(textColor);
     textAlign(CENTER, CENTER);
     textSize(14);
     text(label, x + w/2, y + h/2);
   }
   
-  boolean isMouseOver() {
-    return mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h;
+  boolean isMouseOver(float mx, float my) {
+    return mx > x && mx < x + w && my > y && my < y + h;
   }
 }

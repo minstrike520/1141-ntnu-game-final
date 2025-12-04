@@ -4,40 +4,39 @@ Gif startBackgroundGif;
 float textAlpha = 255;
 boolean alphaIncreasing = false;
 
-// Button areas for title screen
 float startButtonX, startButtonY, startButtonW, startButtonH;
 
 void setupTitleScreen() {
   startBackgroundGif = new Gif(this, "titleScreen.gif");
   startBackgroundGif.loop();
   
-  // Initialize button positions
   startButtonW = 200;
   startButtonH = 60;
-  startButtonX = width / 2 - startButtonW / 2;
-  startButtonY = height / 2 * 0.6 - startButtonH / 2;
+  startButtonX = DESIGN_WIDTH / 2 - startButtonW / 2;
+  startButtonY = DESIGN_HEIGHT / 2 * 0.6 - startButtonH / 2;
 }
 
 void drawTitleScreen() {
   textAlign(CENTER, CENTER);
   
   if (startBackgroundGif != null) {
-    image(startBackgroundGif, 0, 0, width, height);
+    image(startBackgroundGif, 0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
   } else {
     background(0);
   }
   
-  // Draw Start Game button
-  boolean hoverStart = isMouseOverButton(startButtonX, startButtonY, startButtonW, startButtonH);
+  float mx = screenToDesignX(mouseX);
+  float my = screenToDesignY(mouseY);
+  boolean hoverStart = isMouseOverButton(startButtonX, startButtonY, startButtonW, startButtonH, mx, my);
+  
   if (hoverStart) {
     fill(0, 150, 0, 200);
   } else {
     fill(0, 100, 0, textAlpha);
   }
   textSize(48);
-  text("Start Game", width / 2 - 15, startButtonY + 30);
+  text("Start Game", DESIGN_WIDTH / 2 - 15, startButtonY + 30);
   
-  // Blinking effect
   if (alphaIncreasing) {
     textAlpha += 5;
     if (textAlpha >= 255) {
@@ -53,15 +52,16 @@ void drawTitleScreen() {
   }
 }
 
-boolean isMouseOverButton(float x, float y, float w, float h) {
-  return mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
+boolean isMouseOverButton(float x, float y, float w, float h, float mx, float my) {
+  return mx >= x && mx <= x + w && my >= y && my <= y + h;
 }
 
 void handleTitleScreenClick() {
-  // Check if Start Game button is clicked
-  if (isMouseOverButton(startButtonX, startButtonY, startButtonW, startButtonH)) {
+  float mx = screenToDesignX(mouseX);
+  float my = screenToDesignY(mouseY);
+  
+  if (isMouseOverButton(startButtonX, startButtonY, startButtonW, startButtonH, mx, my)) {
     uiStat = UI_CHARACTER_SELECTION;
-    // 當離開標題畫面時停止 GIF 播放(可選,節省資源)
     if (startBackgroundGif != null) {
       startBackgroundGif.pause();
     }

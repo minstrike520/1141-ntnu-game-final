@@ -1,15 +1,11 @@
 // Stage Selector - Preview and select stages
 int selectedStageIndex = 0;
-int totalStages = 3; // Number of available stages
+int totalStages = 3;
 ArrayList<Stage> stageList;
-float stageListScrollOffset = 0; // 滾動偏移量
-float maxScrollOffset = 0; // 最大滾動範圍
+float stageListScrollOffset = 0;
+float maxScrollOffset = 0;
 
-// 使用全域的粒子系統 (leftParticles, rightParticles)
-// 不在這裡重複定義 Particle 類別
-
-// Stage Editor 按鈕
-Button stageEditorButton;
+StageSelectorButton stageEditorButton;
 
 class Stage {
   String name;
@@ -68,7 +64,6 @@ Stage stageMinimalStage() {
 }
 
 void setupStageSelector() {
-  // Initialize stage list
   stageList = new ArrayList<Stage>();
 
   stageList.add(stageClassicArena());
@@ -76,16 +71,56 @@ void setupStageSelector() {
   stageList.add(stageMinimalStage());
 
   selectedStageIndex = 0;
-  stageListScrollOffset = 0; // 重置滾動
+  stageListScrollOffset = 0;
   
-  // 初始化 Stage Editor 按鈕
-  stageEditorButton = new Button(50, height - 50, 120, 40, "STAGE EDIT !!");
+  stageEditorButton = new StageSelectorButton(50, DESIGN_HEIGHT - 50, 120, 40, "STAGE EDIT !!");
+}
+
+// 在 StageSelector.pde 中也定義 Button 類別(避免衝突)
+class StageSelectorButton {
+  float x, y, w, h;
+  String label;
+  color normalColor = color(150);
+  color hoverColor = color(200);
+  color textColor = color(0);
+  boolean isHovered = false;
+  
+  StageSelectorButton(float x, float y, float w, float h, String label) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.label = label;
+  }
+  
+  void update(float mx, float my) {
+    isHovered = isMouseOver(mx, my);
+  }
+  
+  void display() {
+    if (isHovered) {
+      fill(hoverColor);
+    } else {
+      fill(normalColor);
+    }
+    stroke(0);
+    strokeWeight(2);
+    rect(x, y, w, h, 5);
+    
+    fill(textColor);
+    textAlign(CENTER, CENTER);
+    textSize(14);
+    text(label, x + w/2, y + h/2);
+  }
+  
+  boolean isMouseOver(float mx, float my) {
+    return mx > x && mx < x + w && my > y && my < y + h;
+  }
 }
 
 void drawStageSelector() {
-  background(40, 40, 60); // Dark blue-gray background
+  background(40, 40, 60);
   
-  // 使用全域的粒子系統繪製粒子效果
   if (leftParticles != null) {
     for (int i = leftParticles.size() - 1; i >= 0; i--) {
       Particle p = leftParticles.get(i);
@@ -108,97 +143,84 @@ void drawStageSelector() {
     }
   }
   
-  // 隨機生成新粒子
   if (leftParticles != null && random(1) < 0.3) {
-    leftParticles.add(new Particle(random(0, width/3), random(height)));
+    leftParticles.add(new Particle(random(0, DESIGN_WIDTH/3), random(DESIGN_HEIGHT)));
   }
   if (rightParticles != null && random(1) < 0.3) {
-    rightParticles.add(new Particle(random(width*2/3, width), random(height)));
+    rightParticles.add(new Particle(random(DESIGN_WIDTH*2/3, DESIGN_WIDTH), random(DESIGN_HEIGHT)));
   }
   
-  // Draw title
   fill(255);
   textAlign(CENTER, TOP);
   textSize(36);
-  text("SELECT STAGE", width / 2, 30);
+  text("SELECT STAGE", DESIGN_WIDTH / 2, 30);
   
-  // Define layout dimensions
-  float previewWidth = width * 0.55; // 55% for preview
-  float previewHeight = height * 0.7;
+  float previewWidth = DESIGN_WIDTH * 0.55;
+  float previewHeight = DESIGN_HEIGHT * 0.7;
   float previewX = 50;
   float previewY = 100;
   
   float listX = previewX + previewWidth + 40;
-  float listWidth = width - listX - 50;
+  float listWidth = DESIGN_WIDTH - listX - 50;
   
-  // Draw preview window border
   stroke(200);
   strokeWeight(3);
   fill(60, 60, 80);
   rect(previewX, previewY, previewWidth, previewHeight);
   
-  // Draw preview label
   fill(200);
   textAlign(LEFT, TOP);
   textSize(18);
   text("PREVIEW", previewX, previewY - 25);
   
-  // Draw stage preview
   drawStagePreview(previewX, previewY, previewWidth, previewHeight, selectedStageIndex);
   
-  // Draw selection list
   drawStageList(listX, previewY, listWidth, previewHeight);
   
-  // Draw confirmation hint
   float flashAlpha = 128 + sin(frameCount * 0.1) * 127;
   fill(255, flashAlpha);
   textAlign(CENTER, BOTTOM);
   textSize(18);
-  text("Press C to Confirm", width / 2, height - 30);
+  text("Press C to Confirm", DESIGN_WIDTH / 2, DESIGN_HEIGHT - 30);
   
-  // Draw Stage Editor button
-  stageEditorButton.update();
+  float mx = screenToDesignX(mouseX);
+  float my = screenToDesignY(mouseY);
+  stageEditorButton.update(mx, my);
   stageEditorButton.display();
   
-  // Draw controls hint
   if (stageList.size() > 5) {
     fill(200);
     textAlign(RIGHT, BOTTOM);
     textSize(14);
-    text("Use ↑↓ to scroll", width - 20, height - 30);
+    text("Use ↑↓ to scroll", DESIGN_WIDTH - 20, DESIGN_HEIGHT - 30);
   }
 }
 
 void drawStagePreview(float x, float y, float w, float h, int stageIndex) {
   pushMatrix();
   
-  // Create a scaled down preview
   translate(x, y);
   
-  // Clip to preview window
   fill(50, 50, 70);
   noStroke();
   rect(0, 0, w, h);
   
-  // Calculate scale to fit stage in preview
-  float scaleX = w / width;
-  float scaleY = h / height;
-  float previewScale = min(scaleX, scaleY) * 0.9; // 90% to add padding
+  float scaleX = w / DESIGN_WIDTH;
+  float scaleY = h / DESIGN_HEIGHT;
+  float previewScale = min(scaleX, scaleY) * 0.9;
   
-  // Center the preview
-  float offsetX = (w - width * previewScale) / 2;
-  float offsetY = (h - height * previewScale) / 2;
+  float offsetX = (w - DESIGN_WIDTH * previewScale) / 2;
+  float offsetY = (h - DESIGN_HEIGHT * previewScale) / 2;
   
   translate(offsetX, offsetY);
   scale(previewScale);
   
-  // Draw platforms for the selected stage
   ArrayList<Platform> previewPlatforms = stageList.get(stageIndex).platforms;
   
   for (Platform p : previewPlatforms) {
     fill(120, 180, 120);
     stroke(80, 140, 80);
-    strokeWeight(2 / previewScale); // Adjust stroke weight for scale
+    strokeWeight(2 / previewScale);
     rect(p.pos.x, p.pos.y, p.wh.x, p.wh.y);
   }
   
@@ -216,40 +238,36 @@ void drawStageList(float x, float y, float w, float h) {
   float itemWidth = 200;
   float totalHeight = (itemHeight + spacing) * stageList.size();
   
-  // 計算最大滾動範圍
   maxScrollOffset = max(0, totalHeight - h);
   stageListScrollOffset = constrain(stageListScrollOffset, 0, maxScrollOffset);
   
-  // 使用 pushMatrix 來實現裁切效果
   pushMatrix();
   
-  // 繪製背景和邊框
   fill(50, 50, 70, 100);
   stroke(100, 100, 130);
   strokeWeight(2);
   rect(x, y, w, h);
   
-  // 設置裁切區域
   clip(x, y, w, h);
   
-  float startY = y - stageListScrollOffset; // 套用滾動偏移
+  float startY = y - stageListScrollOffset;
+  
+  float mx = screenToDesignX(mouseX);
+  float my = screenToDesignY(mouseY);
   
   for (int i = 0; i < stageList.size(); i++) {
     Stage stage = stageList.get(i);
     float itemY = startY + i * (itemHeight + spacing);
     
-    // 只繪製可見的項目（優化性能）
     if (itemY + itemHeight < y || itemY > y + h) {
       continue;
     }
     
     boolean isSelected = (i == selectedStageIndex);
-    boolean isHovered = isMouseOverStageItem(x, itemY, w, itemHeight, y, h);
+    boolean isHovered = isMouseOverStageItem(x, itemY, w, itemHeight, y, h, mx, my);
     
-    // 計算置中位置
-    float itemX = x + (w - itemWidth) / 2; // 置中於框框
+    float itemX = x + (w - itemWidth) / 2;
     
-    // Draw item background
     if (isSelected) {
       fill(100, 150, 255, 200);
       stroke(150, 200, 255);
@@ -263,18 +281,15 @@ void drawStageList(float x, float y, float w, float h) {
     strokeWeight(2);
     rect(itemX, itemY, itemWidth, itemHeight, 5);
     
-    // Draw stage number
     fill(255);
     textAlign(CENTER, TOP);
     textSize(32);
     text("Stage " + (i + 1), itemX + itemWidth / 2, itemY + 10);
     
-    // Draw stage name
     textSize(16);
     fill(200);
     text(stage.name, itemX + itemWidth / 2, itemY + 50);
     
-    // Draw selection indicator
     if (isSelected) {
       fill(255, 255, 100);
       noStroke();
@@ -287,19 +302,16 @@ void drawStageList(float x, float y, float w, float h) {
   noClip();
   popMatrix();
   
-  // 繪製滾動條（如果需要）
   if (maxScrollOffset > 0) {
     drawScrollbar(x + w - 10, y, 8, h);
   }
 }
 
 void drawScrollbar(float x, float y, float w, float h) {
-  // 滾動條背景
   fill(40, 40, 60);
   noStroke();
   rect(x, y, w, h);
   
-  // 滾動條滑塊
   float scrollbarHeight = h * (h / (h + maxScrollOffset));
   float scrollbarY = y + (stageListScrollOffset / maxScrollOffset) * (h - scrollbarHeight);
   
@@ -307,18 +319,16 @@ void drawScrollbar(float x, float y, float w, float h) {
   rect(x, scrollbarY, w, scrollbarHeight, 4);
 }
 
-boolean isMouseOverStageItem(float x, float itemY, float w, float itemH, float listY, float listH) {
-  // 檢查是否在列表可見區域內
+boolean isMouseOverStageItem(float x, float itemY, float w, float itemH, float listY, float listH, float mx, float my) {
   if (itemY + itemH < listY || itemY > listY + listH) {
     return false;
   }
   
-  // 置中後的項目位置
   float itemWidth = 200;
   float itemX = x + (w - itemWidth) / 2;
   
-  return mouseX >= itemX && mouseX <= itemX + itemWidth &&
-         mouseY >= itemY && mouseY <= itemY + itemH;
+  return mx >= itemX && mx <= itemX + itemWidth &&
+         my >= itemY && my <= itemY + itemH;
 }
 
 void stageSelectorKeyPressed() {
@@ -329,7 +339,6 @@ void stageSelectorKeyPressed() {
     selectedStageIndex = (selectedStageIndex + 1) % stageList.size();
     ensureSelectedVisible();
   } else if (key == 'c' || key == 'C') {
-    // Confirm selection and start game with selected stage
     game = new Game(selectedStageIndex, player1Index, player2Index);
     applyCharacterSettings();
     uiStat = UI_GAME;
@@ -337,20 +346,21 @@ void stageSelectorKeyPressed() {
 }
 
 void stageSelectorMousePressed() {
-  // Check if Stage Editor button is clicked
-  if (stageEditorButton.isMouseOver()) {
+  float mx = screenToDesignX(mouseX);
+  float my = screenToDesignY(mouseY);
+  
+  if (stageEditorButton.isMouseOver(mx, my)) {
     uiStat = UI_STAGE_EDITOR;
     return;
   }
   
-  // Check if clicking on any stage item
-  float previewWidth = width * 0.55;
+  float previewWidth = DESIGN_WIDTH * 0.55;
   float previewX = 50;
   float previewY = 100;
-  float previewHeight = height * 0.7;
+  float previewHeight = DESIGN_HEIGHT * 0.7;
   
   float listX = previewX + previewWidth + 40;
-  float listWidth = width - listX - 50;
+  float listWidth = DESIGN_WIDTH - listX - 50;
   
   float itemHeight = 80;
   float spacing = 20;
@@ -360,35 +370,30 @@ void stageSelectorMousePressed() {
   for (int i = 0; i < stageList.size(); i++) {
     float itemY = startY + i * (itemHeight + spacing);
     
-    // 檢查是否在可見區域
     if (itemY + itemHeight < previewY || itemY > previewY + previewHeight) {
       continue;
     }
     
-    // 置中後的項目位置
     float itemX = listX + (listWidth - itemWidth) / 2;
     
-    if (mouseX >= itemX && mouseX <= itemX + itemWidth &&
-        mouseY >= itemY && mouseY <= itemY + itemHeight) {
+    if (mx >= itemX && mx <= itemX + itemWidth &&
+        my >= itemY && my <= itemY + itemHeight) {
       selectedStageIndex = i;
       break;
     }
   }
 }
 
-// 確保選中的項目可見
 void ensureSelectedVisible() {
-  float previewHeight = height * 0.7;
+  float previewHeight = DESIGN_HEIGHT * 0.7;
   float itemHeight = 80;
   float spacing = 20;
   
   float selectedY = selectedStageIndex * (itemHeight + spacing);
   
-  // 如果選中項目在視窗上方
   if (selectedY < stageListScrollOffset) {
     stageListScrollOffset = selectedY;
   }
-  // 如果選中項目在視窗下方
   else if (selectedY + itemHeight > stageListScrollOffset + previewHeight) {
     stageListScrollOffset = selectedY + itemHeight - previewHeight;
   }
